@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { ArrowLeft, ArrowRight, ChevronDown, Heart, Headphones, Pause, Play, Sparkles, Volume2, X } from "lucide-react";
@@ -35,18 +35,8 @@ export function BirthdayExperience({ greeting }: Props) {
   const [letterOpen, setLetterOpen] = useState(false);
   const [letterPage, setLetterPage] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [audioError, setAudioError] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    if (!greeting.musicUrl) return;
-    const audio = new Audio(greeting.musicUrl);
-    audio.loop = true;
-    audio.autoplay = true;
-    audio.preload = "auto";
-    audio.volume = 0.72;
-    audioRef.current = audio;
-    return () => { audio.pause(); audioRef.current = null; };
-  }, [greeting.musicUrl]);
 
   function startExperience() {
     setStarted(true);
@@ -56,13 +46,21 @@ export function BirthdayExperience({ greeting }: Props) {
 
   async function toggleAudio(forcePlay?: boolean) {
     const audio = audioRef.current;
-    if (!audio) return;
-    if (forcePlay || audio.paused) {
-      await audio.play().catch(() => undefined);
-      setPlaying(true);
-    } else {
+    if (!audio || !greeting.musicUrl) return;
+    if (!forcePlay && !audio.paused) {
       audio.pause();
+      return;
+    }
+
+    try {
+      setAudioError(false);
+      audio.loop = true;
+      audio.volume = 0.72;
+      await audio.play();
+      setPlaying(true);
+    } catch {
       setPlaying(false);
+      setAudioError(true);
     }
   }
 
@@ -87,11 +85,21 @@ export function BirthdayExperience({ greeting }: Props) {
 
   return (
     <main className={`experience-shell ${started ? "is-started" : ""}`} style={greeting.coverBgUrl ? { backgroundImage: `linear-gradient(rgba(53, 7, 13, .48), rgba(53, 7, 13, .7)), url(${greeting.coverBgUrl})` } : undefined}>
+      <audio
+        ref={audioRef}
+        src={greeting.musicUrl || undefined}
+        loop
+        preload="auto"
+        onPlay={() => { setAudioError(false); setPlaying(true); }}
+        onPause={() => setPlaying(false)}
+        onError={() => { setAudioError(true); setPlaying(false); }}
+        aria-hidden="true"
+      />
       <div className="experience-grain" />
       <FloatingBits />
       <div className="experience-topbar">
         <span className="experience-brand"><span className="brand-dot" /> little things</span>
-        {started && <div className="topbar-actions"><button className="music-toggle" onClick={() => toggleAudio()} title={greeting.musicUrl ? "Toggle music" : "No music added yet"}><span className={playing ? "record-mini playing" : "record-mini"}>◉</span>{greeting.musicUrl ? (playing ? "playing" : "music off") : "add a song later"}</button><span className="topbar-date">{greeting.dateText}</span></div>}
+        {started && <div className="topbar-actions"><button className="music-toggle" onClick={() => toggleAudio()} title={greeting.musicUrl ? "Toggle music" : "No music added yet"}><span className={playing ? "record-mini playing" : "record-mini"}>◉</span>{greeting.musicUrl ? (playing ? "playing" : audioError ? "tap to retry" : "music off") : "add a song later"}</button><span className="topbar-date">{greeting.dateText}</span></div>}
       </div>
 
       <AnimatePresence mode="wait">
