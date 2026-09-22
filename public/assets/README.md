@@ -1,5 +1,5 @@
-# Local assets
+# Birthday assets
 
-Personal photos and audio files are intentionally excluded from the public repository.
+The photos and Bee Gees soundtrack in this folder are part of the Athaya birthday keepsake and are intentionally served as public website assets.
 
-For the local demo, add the media files referenced by `src/lib/greeting-assets.ts` to this folder. For a public deployment, move them to private media storage and update the asset URLs instead of committing personal media or copyrighted audio.
+Do not put API keys, database credentials, `.env` files, or other secrets in this folder. If you replace the media, keep the filenames in sync with `src/lib/greeting-assets.ts`.

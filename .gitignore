@@ -7,8 +7,3 @@ out
 !.env.example
 npm-debug.log*
 *.tsbuildinfo
-
-# Local media that can be large or private. Add these files locally or use private storage.
-public/assets/*
-!public/assets/.gitkeep
-!public/assets/README.md
