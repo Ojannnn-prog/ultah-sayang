@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+}
+
+model Greeting {
+  id           String       @id @default(uuid()) @db.Uuid
+  slug         String       @unique
+  recipientName String
+  dateText     String
+  introMessage String?
+  letterPage1  String
+  letterPage2  String?
+  flowerType   String       @default("Gerbera")
+  flowerLabel  String       @default("Bunga ini untukmu")
+  musicUrl     String?
+  coverBgUrl   String?
+  createdAt    DateTime     @default(now())
+  compliments  Compliment[]
+  photos       Photo[]
+  letterPages  LetterPage[]
+
+  @@map("greetings")
+}
+
+model Compliment {
+  id         String   @id @default(uuid()) @db.Uuid
+  greetingId String   @db.Uuid
+  noteText   String
+  orderIndex Int      @default(0)
+  greeting   Greeting @relation(fields: [greetingId], references: [id], onDelete: Cascade)
+
+  @@index([greetingId, orderIndex])
+  @@map("compliments")
+}
+
+model Photo {
+  id         String   @id @default(uuid()) @db.Uuid
+  greetingId String   @db.Uuid
+  photoUrl   String
+  caption    String?
+  section    String   @default("scrapbook")
+  orderIndex Int      @default(0)
+  greeting   Greeting @relation(fields: [greetingId], references: [id], onDelete: Cascade)
+
+  @@index([greetingId, section, orderIndex])
+  @@map("photos")
+}
+
+model LetterPage {
+  id         String   @id @default(uuid()) @db.Uuid
+  greetingId String   @db.Uuid
+  pageNumber Int
+  title      String
+  body       String
+  greeting   Greeting @relation(fields: [greetingId], references: [id], onDelete: Cascade)
+
+  @@unique([greetingId, pageNumber])
+  @@map("letter_pages")
+}
